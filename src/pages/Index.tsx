@@ -17,12 +17,17 @@ interface CobaltResult {
 }
 
 const QUALITY_OPTIONS = [
-  { value: "2160", label: "4K", desc: "2160p - Best quality" },
-  { value: "1080", label: "1080p", desc: "Full HD" },
-  { value: "720", label: "720p", desc: "HD - Good balance" },
-  { value: "480", label: "480p", desc: "SD - Smaller file" },
-  { value: "360", label: "360p", desc: "Low - Smallest file" },
+  { value: "2160", label: "4K", desc: "2160p - Best quality", mbPerMin: 150 },
+  { value: "1080", label: "1080p", desc: "Full HD", mbPerMin: 60 },
+  { value: "720", label: "720p", desc: "HD - Good balance", mbPerMin: 37 },
+  { value: "480", label: "480p", desc: "SD - Smaller file", mbPerMin: 19 },
+  { value: "360", label: "360p", desc: "Low - Smallest file", mbPerMin: 8 },
 ];
+
+const extractYouTubeId = (url: string): string | null => {
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
+  return match ? match[1] : null;
+};
 
 const Index = () => {
   const [url, setUrl] = useState("");
