@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,19 @@ const QUALITY_OPTIONS = [
   { value: "360", label: "360p", desc: "Low - Smallest file", mbPerMin: 8 },
 ];
 
+const DAVID_FACTS = [
+  "David has really nice biceps...",
+  "David's hair looks excellent today.",
+  "David just checked himself out in a spoon.",
+  "David declined a Zoom call — bad lighting.",
+  "David's jawline could cut glass.",
+  "David moisturizes twice a day. Minimum.",
+  "David has never taken a bad photo. Ever.",
+  "David's skincare routine has 14 steps.",
+  "David walked past a mirror and winked at it.",
+  "David's teeth are whiter than this background.",
+];
+
 const extractYouTubeId = (url: string): string | null => {
   const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
   return match ? match[1] : null;
@@ -35,6 +48,16 @@ const Index = () => {
   const [error, setError] = useState("");
   const [downloadUrl, setDownloadUrl] = useState("");
   const [filename, setFilename] = useState("");
+  const [davidIndex, setDavidIndex] = useState(0);
+
+  useEffect(() => {
+    if (view !== "downloading") return;
+    setDavidIndex(Math.floor(Math.random() * DAVID_FACTS.length));
+    const interval = setInterval(() => {
+      setDavidIndex((prev) => (prev + 1) % DAVID_FACTS.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [view]);
 
   const handlePaste = (e: React.ClipboardEvent) => {
     const pasted = e.clipboardData.getData("text").trim();
@@ -225,8 +248,8 @@ const Index = () => {
           <Card>
             <CardContent className="py-12 flex flex-col items-center gap-5">
               <Loader2 className="h-7 w-7 animate-spin text-primary" />
-              <span className="text-sm text-muted-foreground font-medium">
-                Preparing your download...
+              <span className="text-sm text-muted-foreground font-medium italic transition-opacity duration-300">
+                {DAVID_FACTS[davidIndex]}
               </span>
               <Progress value={33} className="w-48" />
             </CardContent>
