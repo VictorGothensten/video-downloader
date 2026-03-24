@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weapp Video Tool</title>
+    <title>Video Downloader</title>
+    <link rel="icon" href="/static/favicon.png" type="image/png">
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <div class="container">
         <div class="brand">
-            <h1>weapp <span>video</span></h1>
+            <h1>Video <span>Downloader</span></h1>
             <p>Download and compress videos from any platform</p>
         </div>
 
@@ -77,15 +78,27 @@
                 <button class="btn btn-secondary" onclick="reset()">Download Another</button>
             </div>
         </div>
-        <div class="footer">
-            Built by <a href="https://weapp.se">weapp.se</a>
-        </div>
     </div>
 
 <script>
 let currentUrl = '';
 let currentInfo = null;
 let pollTimer = null;
+let davidTimer = null;
+let davidIndex = 0;
+
+var DAVID_FACTS = [
+    "David has really nice biceps...",
+    "David's hair looks excellent today.",
+    "David just checked himself out in a spoon.",
+    "David declined a Zoom call — bad lighting.",
+    "David's jawline could cut glass.",
+    "David moisturizes twice a day. Minimum.",
+    "David has never taken a bad photo. Ever.",
+    "David's skincare routine has 14 steps.",
+    "David walked past a mirror and winked at it.",
+    "David's teeth are whiter than this background.",
+];
 
 function show(id) {
     ['input-view', 'loading-view', 'formats-view', 'progress-view', 'done-view'].forEach(function(v) {
@@ -239,8 +252,16 @@ async function startDownload(formatString, compress, crf) {
     var fill = document.getElementById('progress-fill');
     fill.style.width = '0%';
     fill.classList.remove('done');
-    document.getElementById('progress-label').textContent = 'Downloading...';
     document.getElementById('progress-pct').textContent = '0%';
+
+    // Start David facts rotation
+    davidIndex = Math.floor(Math.random() * DAVID_FACTS.length);
+    document.getElementById('progress-label').textContent = DAVID_FACTS[davidIndex];
+    if (davidTimer) clearInterval(davidTimer);
+    davidTimer = setInterval(function() {
+        davidIndex = (davidIndex + 1) % DAVID_FACTS.length;
+        document.getElementById('progress-label').textContent = DAVID_FACTS[davidIndex];
+    }, 3000);
 
     try {
         var res = await fetch('/api/download', {
@@ -283,6 +304,7 @@ function pollStatus(taskId) {
 
             if (data.status === 'done') {
                 clearInterval(pollTimer);
+                if (davidTimer) clearInterval(davidTimer);
                 fill.style.width = '100%';
                 fill.classList.add('done');
                 document.getElementById('done-title').textContent = data.filename;
@@ -291,6 +313,7 @@ function pollStatus(taskId) {
                 show('done-view');
             } else if (data.status === 'error') {
                 clearInterval(pollTimer);
+                if (davidTimer) clearInterval(davidTimer);
                 document.getElementById('progress-label').textContent = 'Error: ' + (data.error || 'Unknown error');
             }
         } catch (e) {
