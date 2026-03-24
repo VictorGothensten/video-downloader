@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Downloader</title>
+    <title>Weapp Video Tool</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <div class="container">
-        <h1>Video Downloader</h1>
+        <div class="brand">
+            <h1>weapp <span>video</span></h1>
+            <p>Download and compress videos from any platform</p>
+        </div>
 
         <!-- State 1: URL Input -->
         <div id="input-view" class="card">
@@ -73,6 +76,9 @@
                 <a id="save-btn" class="btn btn-success" href="#" download>Save File</a>
                 <button class="btn btn-secondary" onclick="reset()">Download Another</button>
             </div>
+        </div>
+        <div class="footer">
+            Built by <a href="https://weapp.se">weapp.se</a>
         </div>
     </div>
 
