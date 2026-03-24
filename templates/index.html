@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Downloader</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Video Downloader</h1>
+
+        <!-- State 1: URL Input -->
+        <div id="input-view" class="card">
+            <div class="url-form">
+                <input type="text" id="url-input" placeholder="Paste a YouTube, Vimeo, or other video URL..." autofocus>
+                <button class="btn btn-primary" id="fetch-btn" onclick="fetchInfo()">Fetch</button>
+            </div>
+            <div id="input-error" class="error-msg hidden"></div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading-view" class="card hidden">
+            <div class="loading-overlay">
+                <div class="spinner"></div>
+                <span>Fetching video info...</span>
+            </div>
+        </div>
+
+        <!-- State 2: Format Selection -->
+        <div id="formats-view" class="hidden">
+            <div class="card">
+                <div class="video-header">
+                    <img id="video-thumb" src="" alt="">
+                    <div class="video-meta">
+                        <h2 id="video-title"></h2>
+                        <span id="video-duration"></span>
+                    </div>
+                </div>
+
+                <div class="section-title">Original Quality</div>
+                <div id="original-formats"></div>
+            </div>
+
+            <div id="compression-card" class="card">
+                <div class="section-title">Compressed (from best quality)</div>
+                <div id="compression-formats"></div>
+            </div>
+
+            <div style="text-align: center; margin-top: 8px;">
+                <button class="btn btn-secondary" onclick="reset()">Back</button>
+            </div>
+        </div>
+
+        <!-- State 3: Progress -->
+        <div id="progress-view" class="card hidden">
+            <div class="progress-container">
+                <div class="progress-label" id="progress-label">Downloading...</div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="progress-fill"></div>
+                </div>
+                <div class="progress-pct" id="progress-pct">0%</div>
+            </div>
+        </div>
+
+        <!-- State 4: Done -->
+        <div id="done-view" class="card hidden">
+            <div class="done-info">
+                <h2 id="done-title">Download Complete</h2>
+                <p class="filesize" id="done-size"></p>
+            </div>
+            <div class="done-actions">
+                <a id="save-btn" class="btn btn-success" href="#" download>Save File</a>
+                <button class="btn btn-secondary" onclick="reset()">Download Another</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+let currentUrl = '';
+let currentInfo = null;
+let pollTimer = null;
+
+function show(id) {
+    ['input-view', 'loading-view', 'formats-view', 'progress-view', 'done-view'].forEach(function(v) {
+        document.getElementById(v).classList.toggle('hidden', v !== id);
+    });
+}
+
+function reset() {
+    if (pollTimer) clearInterval(pollTimer);
+    currentUrl = '';
+    currentInfo = null;
+    document.getElementById('url-input').value = '';
+    document.getElementById('input-error').classList.add('hidden');
+    show('input-view');
+    document.getElementById('url-input').focus();
+}
+
+function formatBytes(bytes) {
+    if (!bytes) return '~unknown';
+    if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(1) + ' GB';
+    if (bytes >= 1048576) return (bytes / 1048576).toFixed(0) + ' MB';
+    return (bytes / 1024).toFixed(0) + ' KB';
+}
+
+function formatDuration(secs) {
+    if (!secs) return '';
+    var m = Math.floor(secs / 60);
+    var s = Math.floor(secs % 60);
+    return m + ':' + String(s).padStart(2, '0');
+}
+
+function createFormatRow(label, sizeText, onClickFn) {
+    var row = document.createElement('div');
+    row.className = 'format-row';
+
+    var info = document.createElement('div');
+    info.className = 'format-info';
+
+    var labelSpan = document.createElement('span');
+    labelSpan.className = 'format-label';
+    labelSpan.textContent = label;
+
+    var sizeSpan = document.createElement('span');
+    sizeSpan.className = 'format-size';
+    sizeSpan.textContent = sizeText;
+
+    info.appendChild(labelSpan);
+    info.appendChild(sizeSpan);
+
+    var btn = document.createElement('button');
+    btn.className = 'btn btn-primary';
+    btn.textContent = 'Download';
+    btn.addEventListener('click', onClickFn);
+
+    row.appendChild(info);
+    row.appendChild(btn);
+    return row;
+}
+
+// Auto-fetch on paste
+document.getElementById('url-input').addEventListener('paste', function() {
+    setTimeout(function() {
+        var val = document.getElementById('url-input').value.trim();
+        if (val.startsWith('http')) fetchInfo();
+    }, 100);
+});
+
+// Enter key
+document.getElementById('url-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') fetchInfo();
+});
+
+async function fetchInfo() {
+    var url = document.getElementById('url-input').value.trim();
+    if (!url) return;
+
+    currentUrl = url;
+    document.getElementById('input-error').classList.add('hidden');
+    show('loading-view');
+
+    try {
+        var res = await fetch('/api/info', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({url: url}),
+        });
+        var data = await res.json();
+
+        if (data.error) {
+            document.getElementById('input-error').textContent = data.error;
+            document.getElementById('input-error').classList.remove('hidden');
+            show('input-view');
+            return;
+        }
+
+        currentInfo = data;
+        renderFormats(data);
+        show('formats-view');
+    } catch (err) {
+        document.getElementById('input-error').textContent = 'Failed to fetch video info. Check the URL.';
+        document.getElementById('input-error').classList.remove('hidden');
+        show('input-view');
+    }
+}
+
+function renderFormats(data) {
+    // Header
+    var thumb = document.getElementById('video-thumb');
+    if (data.thumbnail) {
+        thumb.src = data.thumbnail;
+        thumb.style.display = '';
+    } else {
+        thumb.style.display = 'none';
+    }
+    document.getElementById('video-title').textContent = data.title;
+    document.getElementById('video-duration').textContent = formatDuration(data.duration);
+
+    // Original formats
+    var origContainer = document.getElementById('original-formats');
+    while (origContainer.firstChild) origContainer.removeChild(origContainer.firstChild);
+
+    data.formats.forEach(function(f) {
+        var sizeText = f.filesize ? '~' + formatBytes(f.filesize) : 'Size unknown';
+        var row = createFormatRow(f.label, sizeText, function() {
+            startDownload(f.format_string, false, 0);
+        });
+        origContainer.appendChild(row);
+    });
+
+    // Compression options
+    var compContainer = document.getElementById('compression-formats');
+    while (compContainer.firstChild) compContainer.removeChild(compContainer.firstChild);
+
+    if (data.compression_options.length === 0) {
+        document.getElementById('compression-card').classList.add('hidden');
+    } else {
+        document.getElementById('compression-card').classList.remove('hidden');
+        var bestFormat = data.formats[0].format_string;
+        data.compression_options.forEach(function(c) {
+            var sizeText = '~' + formatBytes(c.estimated_size);
+            var row = createFormatRow(c.label, sizeText, function() {
+                startDownload(bestFormat, true, c.crf);
+            });
+            compContainer.appendChild(row);
+        });
+    }
+}
+
+async function startDownload(formatString, compress, crf) {
+    show('progress-view');
+    var fill = document.getElementById('progress-fill');
+    fill.style.width = '0%';
+    fill.classList.remove('done');
+    document.getElementById('progress-label').textContent = 'Downloading...';
+    document.getElementById('progress-pct').textContent = '0%';
+
+    try {
+        var res = await fetch('/api/download', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                url: currentUrl,
+                format_string: formatString,
+                compress: compress,
+                crf: crf,
+            }),
+        });
+        var data = await res.json();
+        if (data.error) {
+            document.getElementById('progress-label').textContent = data.error;
+            return;
+        }
+        pollStatus(data.task_id);
+    } catch (err) {
+        document.getElementById('progress-label').textContent = 'Failed to start download.';
+    }
+}
+
+function pollStatus(taskId) {
+    pollTimer = setInterval(async function() {
+        try {
+            var res = await fetch('/api/status/' + taskId);
+            var data = await res.json();
+
+            var fill = document.getElementById('progress-fill');
+            var pct = data.progress || 0;
+            fill.style.width = pct + '%';
+            document.getElementById('progress-pct').textContent = pct + '%';
+
+            if (data.status === 'compressing') {
+                document.getElementById('progress-label').textContent = 'Compressing...';
+            } else if (data.status === 'downloading') {
+                document.getElementById('progress-label').textContent = 'Downloading...';
+            }
+
+            if (data.status === 'done') {
+                clearInterval(pollTimer);
+                fill.style.width = '100%';
+                fill.classList.add('done');
+                document.getElementById('done-title').textContent = data.filename;
+                document.getElementById('done-size').textContent = formatBytes(data.filesize);
+                document.getElementById('save-btn').href = '/api/file/' + taskId;
+                show('done-view');
+            } else if (data.status === 'error') {
+                clearInterval(pollTimer);
+                document.getElementById('progress-label').textContent = 'Error: ' + (data.error || 'Unknown error');
+            }
+        } catch (e) {
+            // Ignore transient fetch errors
+        }
+    }, 500);
+}
+</script>
+</body>
+</html>
