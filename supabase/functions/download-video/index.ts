@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 
-const COBALT_API = "https://api.cobalt.tools";
+const COBALT_API = "https://weapp-cobalt.fly.dev";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
