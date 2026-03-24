@@ -47,6 +47,7 @@ mkdir -p "$APP_DIR/downloads" "$APP_DIR/templates" "$APP_DIR/static"
 curl -fsSL "$REPO/app.py" -o "$APP_DIR/app.py"
 curl -fsSL "$REPO/templates/index.html" -o "$APP_DIR/templates/index.html"
 curl -fsSL "$REPO/static/style.css" -o "$APP_DIR/static/style.css"
+curl -fsSL "$REPO/static/AppIcon.icns" -o "$APP_DIR/AppIcon.icns"
 
 echo "✓ Application files downloaded"
 
@@ -57,6 +58,9 @@ APP_BUNDLE="$APPLICATIONS_DIR/$APP_NAME.app"
 rm -rf "$APP_BUNDLE"
 mkdir -p "$APP_BUNDLE/Contents/MacOS"
 mkdir -p "$APP_BUNDLE/Contents/Resources"
+
+# Copy icon
+cp "$APP_DIR/AppIcon.icns" "$APP_BUNDLE/Contents/Resources/AppIcon.icns"
 
 # Create the launcher script
 cat > "$APP_BUNDLE/Contents/MacOS/launcher" << 'LAUNCHER'
