@@ -91,7 +91,7 @@ if [ -z "$PYTHON" ]; then
 fi
 
 # Kill any existing instance
-pkill -f "python3.*app\.py.*$PORT" 2>/dev/null || true
+pkill -f "app\.py" 2>/dev/null || true
 sleep 0.5
 
 # Start the server immediately (cookies export in background inside app.py)
