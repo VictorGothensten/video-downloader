@@ -95,6 +95,9 @@ const Index = () => {
 
       if (result.status === "error") {
         const code = result.error?.code || "Unknown error";
+        if (code === "error.api.youtube.login") {
+          throw new Error("Cookie has expired. Refresh cookie in dev environment.");
+        }
         throw new Error(code);
       }
 
