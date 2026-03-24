@@ -101,7 +101,7 @@ const Index = () => {
         {/* Brand */}
         <div className="text-center mb-12">
           <h1 className="text-3xl font-bold tracking-tight mb-2">
-            weapp <span className="text-primary">video</span>
+            Video <span className="text-primary">Downloader</span>
           </h1>
           <p className="text-sm text-muted-foreground">
             Download videos from YouTube, Vimeo, and more
