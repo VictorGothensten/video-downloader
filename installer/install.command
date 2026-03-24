@@ -47,6 +47,7 @@ mkdir -p "$APP_DIR/downloads" "$APP_DIR/templates" "$APP_DIR/static"
 curl -fsSL "$REPO/app.py" -o "$APP_DIR/app.py"
 curl -fsSL "$REPO/templates/index.html" -o "$APP_DIR/templates/index.html"
 curl -fsSL "$REPO/static/style.css" -o "$APP_DIR/static/style.css"
+curl -fsSL "$REPO/static/favicon.png" -o "$APP_DIR/static/favicon.png"
 curl -fsSL "$REPO/static/AppIcon.icns" -o "$APP_DIR/AppIcon.icns"
 
 echo "✓ Application files downloaded"

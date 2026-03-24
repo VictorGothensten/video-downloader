@@ -312,12 +312,6 @@ function pollStatus(taskId) {
             fill.style.width = pct + '%';
             document.getElementById('progress-pct').textContent = pct + '%';
 
-            if (data.status === 'compressing') {
-                document.getElementById('progress-label').textContent = 'Compressing...';
-            } else if (data.status === 'downloading') {
-                document.getElementById('progress-label').textContent = 'Downloading...';
-            }
-
             if (data.status === 'done') {
                 clearInterval(pollTimer);
                 if (davidTimer) clearInterval(davidTimer);
