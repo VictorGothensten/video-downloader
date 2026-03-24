@@ -92,31 +92,22 @@ fi
 
 # Kill any existing instance
 pkill -f "python3.*app\.py.*$PORT" 2>/dev/null || true
-sleep 1
+sleep 0.5
 
-# Export fresh cookies from Chrome (if available)
-if command -v yt-dlp &>/dev/null; then
-    yt-dlp --cookies-from-browser chrome --cookies "$APP_DIR/cookies.txt" --skip-download "https://www.youtube.com" 2>/dev/null || true
-fi
-
-# Start the server
+# Start the server immediately (cookies export in background inside app.py)
 cd "$APP_DIR"
 $PYTHON app.py --port $PORT > "$LOG_FILE" 2>&1 &
-SERVER_PID=$!
 
 # Wait for server to start
-for i in $(seq 1 10); do
+for i in $(seq 1 15); do
     if curl -s -o /dev/null http://127.0.0.1:$PORT/ 2>/dev/null; then
         break
     fi
-    sleep 1
+    sleep 0.5
 done
 
-# Open browser
+# Open browser and exit (server keeps running in background)
 open "http://127.0.0.1:$PORT"
-
-# Keep running (closing the app kills the server)
-wait $SERVER_PID
 LAUNCHER
 
 chmod +x "$APP_BUNDLE/Contents/MacOS/launcher"
