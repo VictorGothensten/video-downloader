@@ -254,20 +254,6 @@ const Index = () => {
           </Card>
         )}
 
-        {/* Footer */}
-        <div className="text-center mt-10">
-          <p className="text-xs text-muted-foreground">
-            Built by{" "}
-            <a
-              href="https://weapp.se"
-              className="text-primary font-medium hover:underline"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              weapp.se
-            </a>
-          </p>
-        </div>
       </div>
     </div>
   );
