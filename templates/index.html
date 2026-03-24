@@ -232,13 +232,29 @@ function renderFormats(data) {
     var compContainer = document.getElementById('compression-formats');
     while (compContainer.firstChild) compContainer.removeChild(compContainer.firstChild);
 
+    var bestSize = data.formats.length > 0 ? data.formats[0].filesize : null;
+
     if (data.compression_options.length === 0) {
         document.getElementById('compression-card').classList.add('hidden');
     } else {
         document.getElementById('compression-card').classList.remove('hidden');
+
+        // Show current size context
+        if (bestSize) {
+            var context = document.createElement('p');
+            context.className = 'format-size';
+            context.style.marginBottom = '12px';
+            context.textContent = 'Original best quality is ~' + formatBytes(bestSize) + '. Compress to save space:';
+            compContainer.appendChild(context);
+        }
+
         var bestFormat = data.formats[0].format_string;
         data.compression_options.forEach(function(c) {
             var sizeText = '~' + formatBytes(c.estimated_size);
+            if (bestSize) {
+                var saving = Math.round((1 - c.estimated_size / bestSize) * 100);
+                sizeText += ' (' + saving + '% smaller)';
+            }
             var row = createFormatRow(c.label, sizeText, function() {
                 startDownload(bestFormat, true, c.crf);
             });
