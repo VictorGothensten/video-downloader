@@ -152,53 +152,73 @@ const Index = () => {
         )}
 
         {/* Quality Selection */}
-        {view === "quality" && (
-          <>
-            <Card className="mb-4">
-              <CardContent className="pt-6">
-                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">
-                  Video URL
-                </p>
-                <p className="text-sm text-foreground truncate mb-5">{url}</p>
+        {view === "quality" && (() => {
+          const videoId = extractYouTubeId(url);
+          const thumbnailUrl = videoId
+            ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+            : null;
 
-                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">
-                  Select Quality
-                </p>
-                <div className="space-y-1">
-                  {QUALITY_OPTIONS.map((q) => (
-                    <div
-                      key={q.value}
-                      className="flex items-center justify-between py-3.5 border-b last:border-b-0"
-                    >
-                      <div>
-                        <span className="font-semibold text-sm">
-                          {q.label}
-                        </span>
-                        <span className="text-xs text-muted-foreground ml-2">
-                          {q.desc}
-                        </span>
-                      </div>
-                      <Button
-                        size="sm"
-                        className="font-semibold text-xs"
-                        onClick={() => handleDownload(q.value)}
-                      >
-                        <Download className="h-3.5 w-3.5 mr-1" />
-                        Download
-                      </Button>
+          return (
+            <>
+              <Card className="mb-4">
+                <CardContent className="pt-6">
+                  {thumbnailUrl && (
+                    <div className="mb-5 rounded-lg overflow-hidden">
+                      <img
+                        src={thumbnailUrl}
+                        alt="Video thumbnail"
+                        className="w-full h-auto object-cover"
+                      />
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-            <div className="text-center">
-              <Button variant="outline" onClick={reset}>
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                Back
-              </Button>
-            </div>
-          </>
-        )}
+                  )}
+
+                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">
+                    Video URL
+                  </p>
+                  <p className="text-sm text-foreground truncate mb-5">{url}</p>
+
+                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">
+                    Select Quality
+                  </p>
+                  <div className="space-y-1">
+                    {QUALITY_OPTIONS.map((q) => (
+                      <div
+                        key={q.value}
+                        className="flex items-center justify-between py-3.5 border-b last:border-b-0"
+                      >
+                        <div>
+                          <span className="font-semibold text-sm">
+                            {q.label}
+                          </span>
+                          <span className="text-xs text-muted-foreground ml-2">
+                            {q.desc}
+                          </span>
+                          <span className="text-xs text-muted-foreground ml-2">
+                            (~{q.mbPerMin} MB/min)
+                          </span>
+                        </div>
+                        <Button
+                          size="sm"
+                          className="font-semibold text-xs"
+                          onClick={() => handleDownload(q.value)}
+                        >
+                          <Download className="h-3.5 w-3.5 mr-1" />
+                          Download
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+              <div className="text-center">
+                <Button variant="outline" onClick={reset}>
+                  <ArrowLeft className="h-4 w-4 mr-1" />
+                  Back
+                </Button>
+              </div>
+            </>
+          );
+        })()}
 
         {/* Downloading */}
         {view === "downloading" && (
