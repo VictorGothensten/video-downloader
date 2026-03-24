@@ -52,8 +52,10 @@ Deno.serve(async (req) => {
 
     const cobaltData = await cobaltResponse.json();
 
+    // Always return 200 so the Supabase client doesn't throw.
+    // The frontend checks cobaltData.status for errors.
     return new Response(JSON.stringify(cobaltData), {
-      status: cobaltResponse.status,
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
