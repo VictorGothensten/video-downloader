@@ -14,7 +14,11 @@ DOWNLOAD_DIR = os.path.join(BASE_DIR, 'downloads')
 COOKIE_FILE = os.path.join(BASE_DIR, 'cookies.txt')
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-YT_DLP = '/opt/homebrew/bin/yt-dlp'
+import shutil
+import sys
+import argparse
+
+YT_DLP = shutil.which('yt-dlp') or '/opt/homebrew/bin/yt-dlp'
 
 # In-memory task tracker
 tasks = {}
@@ -329,9 +333,21 @@ def refresh_cookies_endpoint():
 
 
 if __name__ == '__main__':
-    # Refresh cookies on startup
-    if not os.path.exists(COOKIE_FILE):
-        print('  Exporting cookies from Chrome...')
-        refresh_cookies()
-    print('\n  Video Downloader running at http://127.0.0.1:8080\n')
-    app.run(debug=False, host='127.0.0.1', port=8080)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--port', type=int, default=8080)
+    args = parser.parse_args()
+
+    # Refresh cookies in background on startup
+    def _startup_cookies():
+        try:
+            if not os.path.exists(COOKIE_FILE):
+                print('  Exporting cookies from Chrome...')
+            refresh_cookies()
+            print('  Cookies ready.')
+        except Exception:
+            print('  Cookie export skipped (Chrome may not be available).')
+
+    threading.Thread(target=_startup_cookies, daemon=True).start()
+
+    print(f'\n  Video Downloader running at http://127.0.0.1:{args.port}\n')
+    app.run(debug=False, host='127.0.0.1', port=args.port)
