@@ -1,8 +1,15 @@
 #!/bin/bash
 # Video Downloader — One-time installer
-# Double-click this file to install everything needed.
+#
+# Run with:
+#   bash <(curl -fsSL https://raw.githubusercontent.com/VictorGothensten/video-downloader/main/installer/install.command)
 
 set -e
+
+REPO="https://raw.githubusercontent.com/VictorGothensten/video-downloader/main"
+APP_DIR="$HOME/.video-downloader"
+APP_NAME="Video Downloader"
+APPLICATIONS_DIR="/Applications"
 
 echo ""
 echo "======================================"
@@ -10,21 +17,17 @@ echo "  Video Downloader — Installer"
 echo "======================================"
 echo ""
 
-APP_DIR="$HOME/.video-downloader"
-APP_NAME="Video Downloader"
-APPLICATIONS_DIR="/Applications"
-
 # --- Install Homebrew if needed ---
 if ! command -v brew &>/dev/null; then
     echo "Installing Homebrew (macOS package manager)..."
+    echo "  You may be asked for your password."
+    echo ""
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-    # Add Homebrew to PATH for this session
     if [ -f /opt/homebrew/bin/brew ]; then
         eval "$(/opt/homebrew/bin/brew shellenv)"
     fi
 fi
-
 echo "✓ Homebrew installed"
 
 # --- Install dependencies ---
@@ -34,35 +37,18 @@ echo "✓ ffmpeg and yt-dlp installed"
 
 # --- Install Python dependencies ---
 echo "Installing Python packages..."
-pip3 install --user flask yt-dlp 2>/dev/null || python3 -m pip install --user flask yt-dlp
+pip3 install --user flask yt-dlp 2>/dev/null || python3 -m pip install --user flask yt-dlp 2>/dev/null || /usr/bin/python3 -m pip install --user flask yt-dlp
 echo "✓ Python packages installed"
 
-# --- Copy app files ---
-echo "Setting up application..."
-mkdir -p "$APP_DIR"
+# --- Download app files from GitHub ---
+echo "Downloading application..."
+mkdir -p "$APP_DIR/downloads" "$APP_DIR/templates" "$APP_DIR/static"
 
-# Download app.py from the repo (or copy locally)
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-if [ -f "$SCRIPT_DIR/../app.py" ]; then
-    cp "$SCRIPT_DIR/../app.py" "$APP_DIR/app.py"
-else
-    echo "Error: app.py not found. Make sure you're running this from the project folder."
-    exit 1
-fi
+curl -fsSL "$REPO/app.py" -o "$APP_DIR/app.py"
+curl -fsSL "$REPO/templates/index.html" -o "$APP_DIR/templates/index.html"
+curl -fsSL "$REPO/static/style.css" -o "$APP_DIR/static/style.css"
 
-mkdir -p "$APP_DIR/downloads"
-mkdir -p "$APP_DIR/templates"
-mkdir -p "$APP_DIR/static"
-
-# Copy templates and static if they exist
-if [ -d "$SCRIPT_DIR/../templates" ]; then
-    cp -r "$SCRIPT_DIR/../templates/"* "$APP_DIR/templates/" 2>/dev/null || true
-fi
-if [ -d "$SCRIPT_DIR/../static" ]; then
-    cp -r "$SCRIPT_DIR/../static/"* "$APP_DIR/static/" 2>/dev/null || true
-fi
-
-echo "✓ Application files installed"
+echo "✓ Application files downloaded"
 
 # --- Create macOS .app bundle ---
 echo "Creating application..."
@@ -80,7 +66,7 @@ cat > "$APP_BUNDLE/Contents/MacOS/launcher" << 'LAUNCHER'
 if [ -f /opt/homebrew/bin/brew ]; then
     eval "$(/opt/homebrew/bin/brew shellenv)"
 fi
-export PATH="/opt/homebrew/bin:$HOME/Library/Python/3.9/bin:$HOME/Library/Python/3.11/bin:$HOME/Library/Python/3.12/bin:$PATH"
+export PATH="/opt/homebrew/bin:$HOME/Library/Python/3.9/bin:$HOME/Library/Python/3.11/bin:$HOME/Library/Python/3.12/bin:$HOME/Library/Python/3.13/bin:$PATH"
 
 APP_DIR="$HOME/.video-downloader"
 PORT=5050
@@ -155,20 +141,17 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << 'PLIST'
 </plist>
 PLIST
 
-echo "✓ Application created at $APP_BUNDLE"
+echo "✓ Application created"
 
 echo ""
 echo "======================================"
 echo "  Installation complete!"
 echo "======================================"
 echo ""
-echo "  You can now open '$APP_NAME' from"
-echo "  your Applications folder, or Spotlight."
+echo "  Open 'Video Downloader' from your"
+echo "  Applications folder or Spotlight."
 echo ""
-echo "  Just double-click it — your browser"
-echo "  will open with the video downloader."
-echo ""
-echo "======================================"
+echo "  Starting it now..."
 echo ""
 
 # Open the app for the first time
