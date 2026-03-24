@@ -185,19 +185,34 @@ def download_worker(task_id, data):
     format_string = data.get('format_string', 'best[ext=mp4]/best/bestvideo+bestaudio')
     compress = data.get('compress', False)
     crf = data.get('crf', 28)
+    audio_only = data.get('audio_only', False)
 
     output_template = os.path.join(DOWNLOAD_DIR, f'{task_id}_%(title).80s.%(ext)s')
 
-    cmd = [
-        YT_DLP,
-        '-f', format_string,
-        '-o', output_template,
-        '--merge-output-format', 'mp4',
-        '--cookies', COOKIE_FILE,
-        '--extractor-args', 'youtube:player_client=web',
-        '--newline',
-        url,
-    ]
+    if audio_only:
+        cmd = [
+            YT_DLP,
+            '-f', 'bestaudio/best',
+            '-x',
+            '--audio-format', 'mp3',
+            '--audio-quality', '0',
+            '-o', output_template,
+            '--cookies', COOKIE_FILE,
+            '--extractor-args', 'youtube:player_client=web',
+            '--newline',
+            url,
+        ]
+    else:
+        cmd = [
+            YT_DLP,
+            '-f', format_string,
+            '-o', output_template,
+            '--merge-output-format', 'mp4',
+            '--cookies', COOKIE_FILE,
+            '--extractor-args', 'youtube:player_client=web',
+            '--newline',
+            url,
+        ]
 
     try:
         proc = subprocess.Popen(

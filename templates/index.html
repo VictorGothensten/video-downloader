@@ -46,6 +46,11 @@
                 <div id="original-formats"></div>
             </div>
 
+            <div class="card">
+                <div class="section-title">Audio Only</div>
+                <div id="audio-format"></div>
+            </div>
+
             <div id="compression-card" class="card">
                 <div class="section-title">Compressed (from best quality)</div>
                 <div id="compression-formats"></div>
@@ -228,6 +233,14 @@ function renderFormats(data) {
         origContainer.appendChild(row);
     });
 
+    // Audio only option
+    var audioContainer = document.getElementById('audio-format');
+    while (audioContainer.firstChild) audioContainer.removeChild(audioContainer.firstChild);
+    var audioRow = createFormatRow('MP3', 'Best quality audio', function() {
+        startDownload('', false, 0, true);
+    });
+    audioContainer.appendChild(audioRow);
+
     // Compression options
     var compContainer = document.getElementById('compression-formats');
     while (compContainer.firstChild) compContainer.removeChild(compContainer.firstChild);
@@ -263,7 +276,7 @@ function renderFormats(data) {
     }
 }
 
-async function startDownload(formatString, compress, crf) {
+async function startDownload(formatString, compress, crf, audioOnly) {
     show('progress-view');
     var fill = document.getElementById('progress-fill');
     fill.style.width = '0%';
@@ -288,6 +301,7 @@ async function startDownload(formatString, compress, crf) {
                 format_string: formatString,
                 compress: compress,
                 crf: crf,
+                audio_only: audioOnly || false,
             }),
         });
         var data = await res.json();
